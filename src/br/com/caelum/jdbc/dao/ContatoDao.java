@@ -36,14 +36,32 @@ public class ContatoDao {
             stmt.execute();
             stmt.close();
         } catch (SQLException e) {
+            throw new DAOException(e);
+        }
+    }
+
+    public List<Contato> pesquisarNome() {
+        try {
+            PreparedStatement stmt = this.connection.prepareStatement("select * from contatos where nome like 'C%'");
+            return listar(stmt);
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public List<Contato> getLista() {
+    public List<Contato> pesquisar(int id) {
+        try {
+            PreparedStatement stmt = this.connection.prepareStatement("select * from contatos where id=?");
+            stmt.setInt(1, id);
+            return listar(stmt);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<Contato> listar(PreparedStatement stmt) {
         try {
             List<Contato> contatos = new ArrayList<Contato>();
-            PreparedStatement stmt = this.connection.prepareStatement("select    *   from    contatos");
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 // criando o objeto Contato
@@ -52,18 +70,26 @@ public class ContatoDao {
                 contato.setNome(rs.getString("nome"));
                 contato.setEmail(rs.getString("email"));
                 contato.setEndereco(rs.getString("endereco"));
-                
+
                 // montando a data através do Calendar
                 Calendar data = Calendar.getInstance();
                 data.setTime(rs.getDate("dataNascimento"));
                 contato.setDataNascimento(data);
-                
+
                 // adicionando o objeto à lista
                 contatos.add(contato);
             }
             rs.close();
             stmt.close();
             return contatos;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<Contato> getLista() {
+        try {
+            return listar(this.connection.prepareStatement("select * from contatos"));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
